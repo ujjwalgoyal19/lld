@@ -1,0 +1,99 @@
+@startuml
+' Controllers
+class UserController {
+  - __user_list: List<User>
+  + create_user(name): User
+  + get_user_by_id(id): User?
+}
+class GroupController {
+  - __group_list: List<Group>
+  + create_group(name, creator: User): Group
+  + get_group_by_id(id): Group?
+}
+class ExpenseController {
+  - __balance_sheet_ctrl: BalanceSheetController
+  + add_expense(...)
+}
+class BalanceSheetController {
+  + update_user_balance_sheet(user, splits, total)
+  - __increment_user_owed_amount(...)
+  - __increment_user_get_back_amount(...)
+}
+
+' Factory & Validators
+class SplitValidatorFactory {
+  + build_split_validator(type): SplitValidator
+}
+SplitValidator <|-- EqualSplitValidator
+SplitValidator <|-- PercentageSplitValidator
+SplitValidator <|-- UnequalSplitValidator
+class SplitValidator {
+  + validate(total, splits): bool
+}
+
+' Models
+class User {
+  - __user_id: str
+  - __user_name: str
+  - __balance_sheet: BalanceSheet
+  + get_user_id(): str
+  + get_balance_sheet(): BalanceSheet
+}
+class Group {
+  - __group_id: str
+  - __group_name: str
+  - __members: List<User>
+  - __expenses: List<Expense>
+  + add_member(u: User)
+  + add_expense(...)
+}
+class Expense {
+  - __expense_id: str
+  - __description: str
+  - __total_amount: float
+  - __paid_by_user: User
+  - __split_details: List<Split>
+  - __split_type: SplitType
+}
+class Split {
+  - __split_type: SplitType
+  - __user: User
+  - __amount: float
+  - __percentage: float
+  + get_user(): User
+}
+class BalanceSheet {
+  - __total_expense_done: float
+  - __total_payment_done: float
+  - __total_money_owed: float
+  - __total_money_get_back: float
+  - __users: Dict<str, Balance>
+  + apply_expense(payer: User, splits: List<Split>)
+}
+class Balance {
+  - __amount_owe: float
+  - __amount_get_back: float
+}
+
+' Enums & Others
+enum SplitType {
+  EQUAL
+  EXACT
+  PERCENT
+}
+
+' Relations
+UserController --> User
+GroupController --> Group
+ExpenseController --> BalanceSheetController
+BalanceSheetController --> User
+SplitValidatorFactory --> SplitValidator
+Group --> ExpenseController
+Group --> User
+Group --> Expense
+ExpenseController --> Expense
+Expense --> Split
+Split --> User
+User --> BalanceSheet
+BalanceSheet --> Balance
+@enduml
